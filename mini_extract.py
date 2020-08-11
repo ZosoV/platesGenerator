@@ -15,5 +15,4 @@ if __name__ == "__main__":
     for i in range(1,num_image + 1):
         str_m = str(i)
         str_m = str_m.zfill(8)
-        if(not str_m in set_m):
-            shutil.copy(source+str_m+".png", destination+str_m+".png")
+        shutil.copy(source+str_m+".png", destination+str_m+".png")
