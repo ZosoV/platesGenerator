@@ -51,7 +51,9 @@ import common
 FONT_DIR = "./fonts"
 FONT_HEIGHT = 32  # Pixel size to which the chars are resized
 
-OUTPUT_SHAPE = (64, 128)
+#OUTPUT_SHAPE = (64, 128)
+OUTPUT_SHAPE = (24, 94)
+
 
 CHARS = common.CHARS + " "
 
@@ -215,22 +217,34 @@ def generate_plate(font_height, char_ims):
 
 
 def generate_bg(num_bg_images):
+    '''
+    Takes randomly a background image and selects the first 
+    with size greater than the OUTPUT_SHAPE. Then crops this image
+    in a random region with the dimension of OUTPUT_SHAPE
+    '''    
     found = False
     while not found:
-        fname = "bgs/{:08d}.jpg".format(random.randint(0, num_bg_images - 1))
-        bg = cv2.imread(fname, cv2.CV_LOAD_IMAGE_GRAYSCALE) / 255.
+        fname = "mini_bgs/{:08d}.jpg".format(random.randint(0, num_bg_images - 1))
+        bg = cv2.imread(fname, cv2.IMREAD_GRAYSCALE) / 255.
         if (bg.shape[1] >= OUTPUT_SHAPE[1] and
             bg.shape[0] >= OUTPUT_SHAPE[0]):
             found = True
 
-    x = random.randint(0, bg.shape[1] - OUTPUT_SHAPE[1])
-    y = random.randint(0, bg.shape[0] - OUTPUT_SHAPE[0])
+    x = random.randint(0, bg.shape[1] - OUTPUT_SHAPE[1]) #take a random crop of the original background
+    y = random.randint(0, bg.shape[0] - OUTPUT_SHAPE[0]) #take a random crop of the original background
+    #[top:bottom,left:rigth]
     bg = bg[y:y + OUTPUT_SHAPE[0], x:x + OUTPUT_SHAPE[1]]
 
     return bg
 
 
 def generate_im(char_ims, num_bg_images):
+    '''
+    Generate images with a background and a plate given
+
+    char_ims: the dict of the char with a especific font
+    num_bg_image: the total number of images generated
+    '''
     bg = generate_bg(num_bg_images)
 
     plate, plate_mask, code = generate_plate(FONT_HEIGHT, char_ims)
@@ -276,7 +290,7 @@ def generate_ims():
     """
     variation = 1.0
     fonts, font_char_ims = load_fonts(FONT_DIR)
-    num_bg_images = len(os.listdir("bgs"))
+    num_bg_images = len(os.listdir("mini_bgs"))
     while True:
         yield generate_im(font_char_ims[random.choice(fonts)], num_bg_images)
 
@@ -287,6 +301,6 @@ if __name__ == "__main__":
     for img_idx, (im, c, p) in enumerate(im_gen):
         fname = "test/{:08d}_{}_{}.png".format(img_idx, c,
                                                "1" if p else "0")
-        print fname
+        print(fname)
         cv2.imwrite(fname, im * 255.)
 
