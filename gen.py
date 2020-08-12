@@ -1,26 +1,4 @@
 #!/usr/bin/env python
-#
-# Copyright (c) 2016 Matthew Earl
-# 
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-# 
-#     The above copyright notice and this permission notice shall be included
-#     in all copies or substantial portions of the Software.
-# 
-#     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-#     OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-#     MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-#     NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-#     DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-#     OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-#     USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
 
 """
 Generate training and test images.
@@ -53,8 +31,8 @@ FONT_DIR = "./fonts"
 FONT_HEIGHT = 32  # Pixel size to which the chars are resized
 PARAMS = None
 
-OUTPUT_SHAPE = (64, 128)
-#OUTPUT_SHAPE = (24, 94)
+#OUTPUT_SHAPE = (64, 128)
+OUTPUT_SHAPE = (24, 94)
 
 
 CHARS = common.CHARS + " "
@@ -78,21 +56,21 @@ def make_char_ims(font_path, output_height):
         yield c, numpy.array(im)[:, :, 0].astype(numpy.float32) / 255.
 
 
-def euler_to_mat(yaw, pitch, roll):
-    # Rotate clockwise about the Y-axis
-    c, s = math.cos(yaw), math.sin(yaw)
-    M = numpy.matrix([[  c, 0.,  s],
-                      [ 0., 1., 0.],
-                      [ -s, 0.,  c]])
-
+def euler_to_mat(rotate_x, rotate_y, rotate_z):
     # Rotate clockwise about the X-axis
-    c, s = math.cos(pitch), math.sin(pitch)
+    c, s = math.cos(rotate_x), math.sin(rotate_x)
     M = numpy.matrix([[ 1., 0., 0.],
                       [ 0.,  c, -s],
-                      [ 0.,  s,  c]]) * M
+                      [ 0.,  s,  c]])
+
+    # Rotate clockwise about the Y-axis
+    c, s = math.cos(rotate_y), math.sin(rotate_y)
+    M = numpy.matrix([[  c, 0.,  s],
+                      [ 0., 1., 0.],
+                      [ -s, 0.,  c]]) * M
 
     # Rotate clockwise about the Z-axis
-    c, s = math.cos(roll), math.sin(roll)
+    c, s = math.cos(rotate_z), math.sin(rotate_z)
     M = numpy.matrix([[  c, -s, 0.],
                       [  s,  c, 0.],
                       [ 0., 0., 1.]]) * M
@@ -113,52 +91,35 @@ def pick_colors():
 
 def make_affine_transform(from_shape, to_shape, 
                           min_scale, max_scale,
-                          scale_variation=1.0,
-                          rotation_variation=1.0,
-                          translation_variation=1.0):
-    out_of_bounds = False
+                          rotation_variation=0.9):
 
+    #Define the shape as size. The difference is the order and type.
+    #shape is (h,w) and size is (w,h) in numpry.array                      
     from_size = numpy.array([[from_shape[1], from_shape[0]]]).T
     to_size = numpy.array([[to_shape[1], to_shape[0]]]).T
 
-    scale = random.uniform((min_scale + max_scale) * 0.5 -
-                           (max_scale - min_scale) * 0.5 * scale_variation,
-                           (min_scale + max_scale) * 0.5 +
-                           (max_scale - min_scale) * 0.5 * scale_variation)
-    if scale > max_scale or scale < min_scale:
-        out_of_bounds = True
-    roll = random.uniform(-0.3, 0.3) * rotation_variation
-    pitch = random.uniform(-0.2, 0.2) * rotation_variation
-    yaw = random.uniform(-1.2, 1.2) * rotation_variation
+    #Select a random scale between the interval
+    scale = random.uniform(min_scale,max_scale)
+                           
+    #Define the random rotation in each axis
+    rotate_z = random.uniform(-0.3, 0.3) * rotation_variation
+    rotate_x = random.uniform(-0.2, 0.2) * rotation_variation
+    rotate_y = random.uniform(-1.2, 1.2) * rotation_variation
 
-    # Compute a bounding box on the skewed input image (`from_shape`).
-    M = euler_to_mat(yaw, pitch, roll)[:2, :2]
-    h, w = from_shape
-    corners = numpy.matrix([[-w, +w, -w, +w],
-                            [-h, -h, +h, +h]]) * 0.5
-    skewed_size = numpy.array(numpy.max(M * corners, axis=1) -
-                              numpy.min(M * corners, axis=1))
-
-    # Set the scale as large as possible such that the skewed and scaled shape
-    # is less than or equal to the desired ratio in either dimension.
-    scale *= numpy.min(to_size / skewed_size)
-
-    # Set the translation such that the skewed and scaled image falls within
-    # the output shape's bounds.
-    trans = (numpy.random.random((2,1)) - 0.5) * translation_variation
-    trans = ((2.0 * trans) ** 5.0) / 2.0
-    if numpy.any(trans < -0.5) or numpy.any(trans > 0.5):
-        out_of_bounds = True
-    trans = (to_size - skewed_size * scale) * trans
-
+    #Take the center of the background holder and the plate holder
     center_to = to_size / 2.
     center_from = from_size / 2.
 
-    M = euler_to_mat(yaw, pitch, roll)[:2, :2]
-    M *= scale
-    M = numpy.hstack([M, trans + center_to - M * center_from])
+    #Evaluate the ratotations and take the matrix
+    M = euler_to_mat(rotate_x, rotate_y, rotate_z)[:2, :2]
 
-    return M, out_of_bounds
+    #Scale the image
+    M *= scale
+
+    #Center the plate holder
+    M = numpy.hstack([M, center_to - M * center_from])
+
+    return M
 
 
 def generate_code():
@@ -234,7 +195,7 @@ def generate_bg(num_bg_images):
     '''    
     found = False
     while not found:
-        fname = "mini_bgs/{:08d}.jpg".format(random.randint(0, num_bg_images - 1))
+        fname = "mini_bgs/{:08d}.jpg".format(random.randint(1, num_bg_images))
         bg = cv2.imread(fname, cv2.IMREAD_GRAYSCALE) / 255.
         if (bg.shape[1] >= OUTPUT_SHAPE[1] and
             bg.shape[0] >= OUTPUT_SHAPE[0]):
@@ -248,45 +209,59 @@ def generate_bg(num_bg_images):
     return bg
 
 
-def generate_im(char_ims, num_bg_images):
+def generate_im(font_char_ims, num_bg_images):
     '''
     Generate images with a background and a plate given
 
-    char_ims: the dict of the char with a especific font
+    font_char_ims: the dict of the char with a especific font
     num_bg_image: the total number of images generated
     '''
+    #Generate a background given the total number of background
     bg = generate_bg(num_bg_images)
 
-    plate, plate_mask, code = generate_plate(FONT_HEIGHT, char_ims)
+    #Generate a plate and plate_mask given a height and the dictionary of fonts
+    plate, plate_mask, code = generate_plate(FONT_HEIGHT, font_char_ims)
     
-    M, out_of_bounds = make_affine_transform(
+    #Return the matrix M to perform the affine transfromation with the plate into the background
+    #out_of_bound is a boolean that indicates if the plate is out of bound of the background.
+    M = make_affine_transform(
                             from_shape=plate.shape,
                             to_shape=bg.shape,
-                            min_scale=0.6,
-                            max_scale=0.875,
-                            rotation_variation=1.0,
-                            scale_variation=1.5,
-                            translation_variation=1.2)
+                            min_scale=0.55,
+                            max_scale=0.63,
+                            rotation_variation=0.7)
+
+    #Creating the plate and plate_mask with a size given by bg              
     plate = cv2.warpAffine(plate, M, (bg.shape[1], bg.shape[0]))
     plate_mask = cv2.warpAffine(plate_mask, M, (bg.shape[1], bg.shape[0]))
 
+    #Joining the plate and plate_mask and adding the background
     out = plate * plate_mask + bg * (1.0 - plate_mask)
 
+    #Resize the image with the final outputs
     out = cv2.resize(out, (OUTPUT_SHAPE[1], OUTPUT_SHAPE[0]))
 
-    out += numpy.random.normal(scale=0.05, size=out.shape)
+    #Adding Noise
+    out += numpy.random.normal(scale=0.8, size=out.shape)
     out = numpy.clip(out, 0., 1.)
 
-    return out, code, not out_of_bounds
+    return out, code
 
 
+# Function that create the dictionary of fonts
 def load_fonts(folder_path,font):
+    '''
+    Creates a dictionary of the given font
+
+    :return:
+        Dictionary: key - character, value - the matrix of character
+    '''
     font_char_ims = {}
 
     font_char_ims = dict(make_char_ims(os.path.join(folder_path,
                                                 font),
                                                 FONT_HEIGHT))
-    return font, font_char_ims
+    return font_char_ims
 
 
 def generate_ims():
@@ -297,13 +272,18 @@ def generate_ims():
         Iterable of number plate images.
 
     """
-    variation = 1.0
-    font, font_char_ims = load_fonts(FONT_DIR,PARAMS.font)
+
+    #get the dictionary of fonts where key is the character and value are the matrix of that character
+    font_char_ims = load_fonts(FONT_DIR,PARAMS.font)
+
+    #takes the total number of background in the folder mini_bgs
     num_bg_images = len(os.listdir("mini_bgs"))
     while True:
+        #generate an image given the dictionaty of fonts and the total number of background
         yield generate_im(font_char_ims, num_bg_images)
 
 
+#Function to take the params by command line
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--num-img', type=int, default=10,
@@ -312,20 +292,28 @@ def parse_args():
                         help='Chose the font of the plates')
     parser.add_argument('--format', type=int, default=1,
                         help='Chose the correct format 1: current 2: past format')
+    parser.add_argument('--star-idx', type=int, default=5602,
+                        help='Chose the index to start the names of images')
     return parser.parse_args()
 
 
-def main(args):
+def main():
+    #create the folder test
     os.mkdir("test")
+
+    #create a iterator with coroutine that five the total number of images
     im_gen = itertools.islice(generate_ims(), PARAMS.num_img)
 
-    for img_idx, (im, c, p) in enumerate(im_gen):
-        fname = "test/{:08d}_{}_{}.png".format(img_idx, c,
-                                               "1" if p else "0")
+    #iterate through the iterator display the name and store in the folder test
+    for img_idx, (im, c) in enumerate(im_gen,PARAMS.star_idx):
+        fname = "test/{:012d}.png".format(img_idx)
         print(fname)
         cv2.imwrite(fname, im * 255.)
 
 if __name__ == "__main__":
+
+    #Take the argument by command line
     PARAMS = parse_args()
+
     main()
 
