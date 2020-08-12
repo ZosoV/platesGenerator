@@ -132,7 +132,7 @@ def generate_code():
                 random.choice(common.DIGITS),
                 random.choice(common.DIGITS))
     else:
-        return "{}{} {}{}{}{}".format(
+        return "{}{}{}{}{}{}".format(
                 random.choice(common.past_format_letter1),
                 random.choice(common.past_format_letter2),
                 random.choice(common.DIGITS),
@@ -156,10 +156,11 @@ def rounded_rect(shape, radius):
     return out
 
 
-def generate_plate(font_height, char_ims):
+def generate_plate(font_height, char_ims, extra_spacing):
     h_padding = random.uniform(0.2, 0.4) * font_height
     v_padding = random.uniform(0.1, 0.3) * font_height
     spacing = font_height * random.uniform(-0.05, 0.05)
+    
     radius = 1 + int(font_height * 0.1 * random.random())
 
     code = generate_code()
@@ -167,7 +168,7 @@ def generate_plate(font_height, char_ims):
     text_width += (len(code) - 1) * spacing
 
     out_shape = (int(font_height + v_padding * 2),
-                 int(text_width + h_padding * 2))
+                 int(text_width + (h_padding * 2) + extra_spacing[0] + extra_spacing[1]))
 
     text_color, plate_color = pick_colors()
     
@@ -175,11 +176,16 @@ def generate_plate(font_height, char_ims):
     
     x = h_padding
     y = v_padding 
-    for c in code:
+
+    i = 0
+    for idx, c in enumerate(code,1):
         char_im = char_ims[c]
         ix, iy = int(x), int(y)
         text_mask[iy:iy + char_im.shape[0], ix:ix + char_im.shape[1]] = char_im
         x += char_im.shape[1] + spacing
+        if (idx % 2 == 0 and idx < len(code)):
+            x += extra_spacing[i]
+            i += 1
 
     plate = (numpy.ones(out_shape) * plate_color * (1. - text_mask) +
              numpy.ones(out_shape) * text_color * text_mask)
@@ -219,8 +225,15 @@ def generate_im(font_char_ims, num_bg_images):
     #Generate a background given the total number of background
     bg = generate_bg(num_bg_images)
 
+    #Control the spacing each two characters based on format 1 and format 2
+    extra_spacing = []
+    if (PARAMS.format == 1):
+        extra_spacing = [3.5, 6.5]
+    elif (PARAMS.format == 2):
+        extra_spacing = [7.5, 2.5]
+
     #Generate a plate and plate_mask given a height and the dictionary of fonts
-    plate, plate_mask, code = generate_plate(FONT_HEIGHT, font_char_ims)
+    plate, plate_mask, code = generate_plate(FONT_HEIGHT, font_char_ims, extra_spacing)
     
     #Return the matrix M to perform the affine transfromation with the plate into the background
     #out_of_bound is a boolean that indicates if the plate is out of bound of the background.
@@ -242,7 +255,7 @@ def generate_im(font_char_ims, num_bg_images):
     out = cv2.resize(out, (OUTPUT_SHAPE[1], OUTPUT_SHAPE[0]))
 
     #Adding Noise
-    out += numpy.random.normal(scale=0.8, size=out.shape)
+    out += numpy.random.normal(scale=0.085, size=out.shape)
     out = numpy.clip(out, 0., 1.)
 
     return out, code
@@ -291,7 +304,7 @@ def parse_args():
     parser.add_argument('--font', type=str, default="FE-FONT.ttf",
                         help='Chose the font of the plates')
     parser.add_argument('--format', type=int, default=1,
-                        help='Chose the correct format 1: current 2: past format')
+                        help='Chose the correct format 1: current and 2: past format')
     parser.add_argument('--star-idx', type=int, default=5602,
                         help='Chose the index to start the names of images')
     return parser.parse_args()
