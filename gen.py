@@ -47,12 +47,13 @@ from PIL import ImageDraw
 from PIL import ImageFont
 
 import common
+import argparse
 
 FONT_DIR = "./fonts"
 FONT_HEIGHT = 32  # Pixel size to which the chars are resized
 
-#OUTPUT_SHAPE = (64, 128)
-OUTPUT_SHAPE = (24, 94)
+OUTPUT_SHAPE = (64, 128)
+#OUTPUT_SHAPE = (24, 94)
 
 
 CHARS = common.CHARS + " "
@@ -270,17 +271,16 @@ def generate_im(char_ims, num_bg_images):
     return out, code, not out_of_bounds
 
 
-def load_fonts(folder_path):
+def load_fonts(folder_path,font):
     font_char_ims = {}
-    fonts = [f for f in os.listdir(folder_path) if f.endswith('.ttf')]
-    for font in fonts:
-        font_char_ims[font] = dict(make_char_ims(os.path.join(folder_path,
-                                                              font),
-                                                 FONT_HEIGHT))
-    return fonts, font_char_ims
+
+    font_char_ims = dict(make_char_ims(os.path.join(folder_path,
+                                                font),
+                                                FONT_HEIGHT))
+    return font, font_char_ims
 
 
-def generate_ims():
+def generate_ims(font):
     """
     Generate number plate images.
 
@@ -289,18 +289,32 @@ def generate_ims():
 
     """
     variation = 1.0
-    fonts, font_char_ims = load_fonts(FONT_DIR)
+    font, font_char_ims = load_fonts(FONT_DIR,font)
     num_bg_images = len(os.listdir("mini_bgs"))
     while True:
-        yield generate_im(font_char_ims[random.choice(fonts)], num_bg_images)
+        yield generate_im(font_char_ims, num_bg_images)
 
 
-if __name__ == "__main__":
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--num-img', type=int, default=10,
+                        help='Number of generated images')
+    parser.add_argument('--font', type=str, default="FE-FONT.ttf",
+                        help='Chose the font of the plates')
+
+    return parser.parse_args()
+
+
+def main(args):
     os.mkdir("test")
-    im_gen = itertools.islice(generate_ims(), int(sys.argv[1]))
+    im_gen = itertools.islice(generate_ims(args.font), args.num_img)
+
     for img_idx, (im, c, p) in enumerate(im_gen):
         fname = "test/{:08d}_{}_{}.png".format(img_idx, c,
                                                "1" if p else "0")
         print(fname)
         cv2.imwrite(fname, im * 255.)
+
+if __name__ == "__main__":
+    main(parse_args())
 
