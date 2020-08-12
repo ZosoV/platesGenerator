@@ -51,6 +51,7 @@ import argparse
 
 FONT_DIR = "./fonts"
 FONT_HEIGHT = 32  # Pixel size to which the chars are resized
+PARAMS = None
 
 OUTPUT_SHAPE = (64, 128)
 #OUTPUT_SHAPE = (24, 94)
@@ -161,14 +162,22 @@ def make_affine_transform(from_shape, to_shape,
 
 
 def generate_code():
-    return "{}{}{}{} {}{}{}".format(
-        random.choice(common.LETTERS),
-        random.choice(common.LETTERS),
-        random.choice(common.DIGITS),
-        random.choice(common.DIGITS),
-        random.choice(common.LETTERS),
-        random.choice(common.LETTERS),
-        random.choice(common.LETTERS))
+    if (PARAMS.format == 1):
+        return "{}{}{}{}{}{}".format(
+                random.choice(common.actual_format),
+                random.choice(common.actual_format),
+                random.choice(common.actual_format),
+                random.choice(common.actual_format),
+                random.choice(common.DIGITS),
+                random.choice(common.DIGITS))
+    else:
+        return "{}{} {}{}{}{}".format(
+                random.choice(common.past_format_letter1),
+                random.choice(common.past_format_letter2),
+                random.choice(common.DIGITS),
+                random.choice(common.DIGITS),
+                random.choice(common.DIGITS),
+                random.choice(common.DIGITS))
 
 
 def rounded_rect(shape, radius):
@@ -280,7 +289,7 @@ def load_fonts(folder_path,font):
     return font, font_char_ims
 
 
-def generate_ims(font):
+def generate_ims():
     """
     Generate number plate images.
 
@@ -289,7 +298,7 @@ def generate_ims(font):
 
     """
     variation = 1.0
-    font, font_char_ims = load_fonts(FONT_DIR,font)
+    font, font_char_ims = load_fonts(FONT_DIR,PARAMS.font)
     num_bg_images = len(os.listdir("mini_bgs"))
     while True:
         yield generate_im(font_char_ims, num_bg_images)
@@ -301,13 +310,14 @@ def parse_args():
                         help='Number of generated images')
     parser.add_argument('--font', type=str, default="FE-FONT.ttf",
                         help='Chose the font of the plates')
-
+    parser.add_argument('--format', type=int, default=1,
+                        help='Chose the correct format 1: current 2: past format')
     return parser.parse_args()
 
 
 def main(args):
     os.mkdir("test")
-    im_gen = itertools.islice(generate_ims(args.font), args.num_img)
+    im_gen = itertools.islice(generate_ims(), PARAMS.num_img)
 
     for img_idx, (im, c, p) in enumerate(im_gen):
         fname = "test/{:08d}_{}_{}.png".format(img_idx, c,
@@ -316,5 +326,6 @@ def main(args):
         cv2.imwrite(fname, im * 255.)
 
 if __name__ == "__main__":
-    main(parse_args())
+    PARAMS = parse_args()
+    main()
 
