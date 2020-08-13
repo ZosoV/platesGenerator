@@ -319,7 +319,7 @@ def main():
 
     #iterate through the iterator display the name and store in the folder test
     for img_idx, (im, c) in enumerate(im_gen,PARAMS.star_idx):
-        fname = "test/{:012d}.png".format(img_idx)
+        fname = "test/{:012d}_{}.png".format(img_idx,c)
         print(fname)
         cv2.imwrite(fname, im * 255.)
 
