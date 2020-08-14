@@ -6,3 +6,4 @@ __pycache__/
 annotations.txt
 test*/
 test_samples/
+mini_bg/
