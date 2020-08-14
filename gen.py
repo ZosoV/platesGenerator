@@ -240,9 +240,9 @@ def generate_im(font_char_ims, num_bg_images):
     M = make_affine_transform(
                             from_shape=plate.shape,
                             to_shape=bg.shape,
-                            min_scale=0.55,
-                            max_scale=0.63,
-                            rotation_variation=0.7)
+                            min_scale=0.45,
+                            max_scale=0.55,
+                            rotation_variation=0.2)
 
     #Creating the plate and plate_mask with a size given by bg              
     plate = cv2.warpAffine(plate, M, (bg.shape[1], bg.shape[0]))
