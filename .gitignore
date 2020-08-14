@@ -5,3 +5,4 @@ test_format1/
 test_format2/
 __pycache__/
 .pytes_cache/
+annotations.txt
