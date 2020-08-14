@@ -28,7 +28,7 @@ You can also add some characteristics to `./gen.py` using some parse statements,
 - `--format` : chose the format to return the plate. It can be `1` or `2` for for format 1 or format 2
 - `--star-idx` : start to name the images from this index.
 
-4. `./annotation.py --initial_idx 1 final_idx 10`: Label the images from 1 to 10, creating a `annotation.txt` where each line context the following information: `crops/<img_number>.jpg <license_plate_code> 
+4. `./annotation.py --initial_idx 1 final_idx 10`: Label the images from 1 to 10, creating a `annotation.txt` where each line context the following information: `crops/<img_number>.jpg <license_plate_code>` 
 
 
 ### Plates Format
