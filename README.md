@@ -1,4 +1,4 @@
-# platesGenerator
+# License Plates Generator
 Algorithm to generate license plates with an specific fonts. The algorithm works in the following way:
 
 1. Take a random background and take a crop from it with the dimensions `OUTPUT_SHAPE`.
