@@ -1,3 +1,7 @@
 bgs/
 mini_bgs/
 test/
+test_format1/
+test_format2/
+__pycache__/
+.pytes_cache/
