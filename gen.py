@@ -24,7 +24,6 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 
-import common
 import argparse
 
 FONT_DIR = "./fonts"
@@ -34,10 +33,26 @@ PARAMS = None
 #OUTPUT_SHAPE = (64, 128)
 OUTPUT_SHAPE = (24, 94)
 
+#SPECIFICATIONS OF THE PLATES FORMATS
 
-CHARS = common.CHARS + " "
+#FORMAT 1 - BB BB 00 
+#where the B can get a letter in LETTER_FORMAT_1 and 0 can be any digit from 0 to 9
+LETTER_FORMAT_1 = 'BCDFGHJKLPRSTVWXYZ' 
+
+#FORMAT 2 - AB 00 00 
+#where the A can get a letter in LETTER_1_FORMAT_2, and B can get a letter in LETTER_2_FORMAT_2
+#and 0 can be any digit from 0 to 9
+LETTER_1_FORMAT_2 = 'ABCDEFGHKLNPRSTUVXYZWM'
+LETTER_2_FORMAT_2 = 'ABCDEFGHIJKLNPRSTUVXYZ'
+
+#Variables to create the char using a font
+DIGITS = "0123456789"
+LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+CHARS = LETTERS + DIGITS
+CHARS = CHARS + " "
 
 
+#Function that returns a char with a its respective img RGB using a font
 def make_char_ims(font_path, output_height):
     font_size = output_height * 4
 
@@ -56,6 +71,7 @@ def make_char_ims(font_path, output_height):
         yield c, numpy.array(im)[:, :, 0].astype(numpy.float32) / 255.
 
 
+#Function that apply different rotation to the plate
 def euler_to_mat(rotate_x, rotate_y, rotate_z):
     # Rotate clockwise about the X-axis
     c, s = math.cos(rotate_x), math.sin(rotate_x)
@@ -78,6 +94,7 @@ def euler_to_mat(rotate_x, rotate_y, rotate_z):
     return M
 
 
+#Function that take the color of the plates
 def pick_colors():
     first = True
     while first or plate_color - text_color < 0.3:
@@ -89,12 +106,13 @@ def pick_colors():
     return text_color, plate_color
 
 
+#Function that creates a M matrix for a affine transformation
 def make_affine_transform(from_shape, to_shape, 
                           min_scale, max_scale,
                           rotation_variation=0.9):
 
     #Define the shape as size. The difference is the order and type.
-    #shape is (h,w) and size is (w,h) in numpry.array                      
+    #shape is (h,w) and size is (w,h) in numpy.array                      
     from_size = numpy.array([[from_shape[1], from_shape[0]]]).T
     to_size = numpy.array([[to_shape[1], to_shape[0]]]).T
 
@@ -121,26 +139,27 @@ def make_affine_transform(from_shape, to_shape,
 
     return M
 
-
+#Function that generates de code of plate using a prefined format
 def generate_code():
     if (PARAMS.format == 1):
         return "{}{}{}{}{}{}".format(
-                random.choice(common.actual_format),
-                random.choice(common.actual_format),
-                random.choice(common.actual_format),
-                random.choice(common.actual_format),
-                random.choice(common.DIGITS),
-                random.choice(common.DIGITS))
+                random.choice(LETTER_FORMAT_1),
+                random.choice(LETTER_FORMAT_1),
+                random.choice(LETTER_FORMAT_1),
+                random.choice(LETTER_FORMAT_1),
+                random.choice(DIGITS),
+                random.choice(DIGITS))
     else:
         return "{}{}{}{}{}{}".format(
-                random.choice(common.past_format_letter1),
-                random.choice(common.past_format_letter2),
-                random.choice(common.DIGITS),
-                random.choice(common.DIGITS),
-                random.choice(common.DIGITS),
-                random.choice(common.DIGITS))
+                random.choice(LETTER_1_FORMAT_2),
+                random.choice(LETTER_2_FORMAT_2),
+                random.choice(DIGITS),
+                random.choice(DIGITS),
+                random.choice(DIGITS),
+                random.choice(DIGITS))
 
 
+#Function that return a rounded rect given a shape and radius
 def rounded_rect(shape, radius):
     out = numpy.ones(shape)
     out[:radius, :radius] = 0.0
@@ -155,25 +174,39 @@ def rounded_rect(shape, radius):
 
     return out
 
-
+# Function that generates the images of the plate
 def generate_plate(font_height, char_ims, extra_spacing):
+    #Define some spacing in the vertical and horizontal way
     h_padding = random.uniform(0.2, 0.4) * font_height
     v_padding = random.uniform(0.1, 0.3) * font_height
+
+    #Define the spacing between characters
     spacing = font_height * random.uniform(-0.05, 0.05)
     
+    #Definig the radious of the rounded rect of the plate
     radius = 1 + int(font_height * 0.1 * random.random())
 
+    #Generate a random code to a plate
     code = generate_code()
+
+    #Define the text_widh considering the space of each letter and
+    #some spacing between them
     text_width = sum(char_ims[c].shape[1] for c in code)
     text_width += (len(code) - 1) * spacing
 
+    #Here we use extra spacing to follow the format 1 and 2 of chilean license plates
+    #The extra spacing is added each two characters
     out_shape = (int(font_height + v_padding * 2),
                  int(text_width + (h_padding * 2) + extra_spacing[0] + extra_spacing[1]))
 
+    #Take the text color and plate color
     text_color, plate_color = pick_colors()
     
+    #Generate the matrix where we will place the character of the plate
     text_mask = numpy.zeros(out_shape)
     
+    #Iterate for the characters of code adding some padding, spacing a extra spacing 
+    #between character.
     x = h_padding
     y = v_padding 
 
@@ -187,6 +220,7 @@ def generate_plate(font_height, char_ims, extra_spacing):
             x += extra_spacing[i]
             i += 1
 
+    #Place the color of text and plate in the final plate
     plate = (numpy.ones(out_shape) * plate_color * (1. - text_mask) +
              numpy.ones(out_shape) * text_color * text_mask)
 
@@ -201,16 +235,15 @@ def generate_bg(num_bg_images):
     '''    
     found = False
     while not found:
-        fname = "mini_bgs/{:08d}.jpg".format(random.randint(1, num_bg_images - 1))
+        fname = PARAMS.dataset + "/{:08d}.jpg".format(random.randint(1, num_bg_images - 1))
         bg = cv2.imread(fname, cv2.IMREAD_GRAYSCALE) / 255.
         if (bg.shape[1] >= OUTPUT_SHAPE[1] and
             bg.shape[0] >= OUTPUT_SHAPE[0]):
             found = True
-
-    x = random.randint(0, bg.shape[1] - OUTPUT_SHAPE[1]) #take a random crop of the original background
-    y = random.randint(0, bg.shape[0] - OUTPUT_SHAPE[0]) #take a random crop of the original background
-    #[top:bottom,left:rigth]
-    bg = bg[y:y + OUTPUT_SHAPE[0], x:x + OUTPUT_SHAPE[1]]
+    #take a random crop of the original background
+    x = random.randint(0, bg.shape[1] - OUTPUT_SHAPE[1]) 
+    y = random.randint(0, bg.shape[0] - OUTPUT_SHAPE[0]) 
+    bg = bg[y:y + OUTPUT_SHAPE[0], x:x + OUTPUT_SHAPE[1]] #bg[top:bottom,left:rigth]
 
     return bg
 
@@ -289,8 +322,8 @@ def generate_ims():
     #get the dictionary of fonts where key is the character and value are the matrix of that character
     font_char_ims = load_fonts(FONT_DIR,PARAMS.font)
 
-    #takes the total number of background in the folder mini_bgs
-    num_bg_images = len(os.listdir("mini_bgs"))
+    #takes the total number of background in the folder PARAMS.dataset
+    num_bg_images = len(os.listdir(PARAMS.dataset))
     while True:
         #generate an image given the dictionaty of fonts and the total number of background
         yield generate_im(font_char_ims, num_bg_images)
@@ -305,8 +338,10 @@ def parse_args():
                         help='Chose the font of the plates')
     parser.add_argument('--format', type=int, default=1,
                         help='Chose the correct format 1: current and 2: past format')
-    parser.add_argument('--star-idx', type=int, default=5203,
+    parser.add_argument('--star-idx', type=int, default=1,
                         help='Chose the index to start the names of images')
+    parser.add_argument('--dataset', type=str, default="mini_bgs",
+                        help='Chose the dataset to generate the images')
     return parser.parse_args()
 
 

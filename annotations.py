@@ -1,13 +1,15 @@
-import argparse 
+import argparse
+import os
 import subprocess
+from subprocess import PIPE
 
 
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--initial_idx', type=str, default='000000000000',
+    parser.add_argument('--initial_idx', type=str, default='1',
                         help='Initial index of images to annotate')
-    parser.add_argument('--final_idx', type=str, default='000000000001',
+    parser.add_argument('--final_idx', type=str, default='5',
                         help='Final idx of the images to annotate')
 
     return parser.parse_args()
@@ -34,15 +36,13 @@ def renameFolders(listNames):
 
 if __name__ == "__main__":
     params = parse_args()
-    command = ['ls','test/']
-    images = subprocess.run(command,capture_output=True, text=True).stdout.split()
-    print(images)
+    images = sorted(os.listdir('test/'))
     idx_ini = 0
     idx_fin = 0
     for image in images:
-        if image[:12] == params.initial_idx:
+        if str(image[:12]) == params.initial_idx.zfill(12):
             idx_ini = images.index(image)
-        if image[:12] == params.final_idx:
+        if str(image[:12]) == params.final_idx.zfill(12):
             idx_fin = images.index(image)
 
     print(idx_ini)
