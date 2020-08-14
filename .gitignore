@@ -1,3 +1,8 @@
 bgs/
 mini_bgs/
 test/
+__pycache__/
+.pytes_cache/
+annotations.txt
+test*/
+test_samples/
