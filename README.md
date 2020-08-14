@@ -30,6 +30,7 @@ You can also add some characteristics to `./gen.py` using some parse statements,
 
 4. `./annotation.py --initial_idx 1 final_idx 10`: Label the images from 1 to 10, creating a `annotation.txt` where each line context the following information: `crops/<img_number>.jpg <license_plate_code>` 
 
+- `--img_path`: select the path where are the images.
 
 ### Plates Format
 
