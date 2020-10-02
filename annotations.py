@@ -11,7 +11,8 @@ def parse_args():
                         help='Initial index of images to annotate')
     parser.add_argument('--final_idx', type=str, default='5',
                         help='Final idx of the images to annotate')
-
+    parser.add_argument('--img_path', type=str, default='test/'
+			help='Select the path of the images'=
     return parser.parse_args()
 
 def writeAnnotations(strNames, strPlates):
@@ -27,16 +28,16 @@ def writeAnnotations(strNames, strPlates):
 
     annotationsFile.close()
 
-def renameFolders(listNames):
+def renameFolders(listNames,img_path):
     print(listNames)
     for name in listNames:
-        subprocess.run(["mv", "test/"+name, "test/"+name[:12]+".png"])
+        subprocess.run(["cp", img_path +name, "crops/"+name[:12]+".png"])
     
 
 
 if __name__ == "__main__":
     params = parse_args()
-    images = sorted(os.listdir('test/'))
+    images = sorted(os.listdir(parser.img_path))
     idx_ini = 0
     idx_fin = 0
     for image in images:
@@ -48,7 +49,7 @@ if __name__ == "__main__":
     print(idx_ini)
     print(idx_fin)
     images = images[idx_ini: idx_fin+1]
-    renameFolders(images)
+    renameFolders(images, params.img_path)
 
     names = list(map(lambda image: image[:12], images))
     plates = list(map(lambda plate: plate[13:19], images))
