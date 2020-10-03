@@ -88,6 +88,7 @@ def load_images(path):
     images= glob.glob(path)
     for index in range(len(images)):
         image= cv2.cvtColor(cv2.imread(images[index]),cv2.COLOR_BGR2RGB)
+        # image= cv2.imread(images[index])
         image_list.append(image)
         # image_list.append(cv2.resize(image,(1280,720)))
      

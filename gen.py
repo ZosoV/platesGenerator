@@ -445,7 +445,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--num-img', type=int, default=5,
                         help='Number of generated images')
-    parser.add_argument('--format', type=int, default=2,
+    parser.add_argument('--format', type=int, default=1,
                         help='Chose the correct format 1: current and 2: past format')
     parser.add_argument('--star-idx', type=int, default=12951,
                         help='Chose the index to start the names of images')
@@ -464,7 +464,7 @@ def main():
 
     #iterate through the iterator display the name and store in the folder test
     for img_idx, (im, c) in enumerate(im_gen,PARAMS.star_idx):
-        fname = "test/{:012d}-gen_{}.jpg".format(img_idx,c)
+        fname = "test/{:012d}-gen{}_{}.jpg".format(img_idx,PARAMS.format,c)
         print(fname)
         cv2.imwrite(fname, im)
 
