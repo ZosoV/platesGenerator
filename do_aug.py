@@ -23,6 +23,8 @@ if not os.path.exists(augmentation_dir) and rank == 0:
 images= glob.glob(path)
 
 def brigth_aug_chunk(image_list):
+    print("AUGMENTATION BRIGTHNESS AND CONTRAST")
+
     # Brigthness and Contrast # Augemented
     for idx, img_path in enumerate(image_list):
 
@@ -46,6 +48,7 @@ def brigth_aug_chunk(image_list):
         cv2.imwrite(os.path.join(augmentation_dir,aug_name),rd_image)
 
 def random_shadow_aug_chunk(image_list):
+    print("AUGMENTATION RANDOM SHADOW")
     # Random Shadow # Augemented 3
     for idx, img_path in enumerate(image_list):
 
@@ -100,6 +103,7 @@ def random_shadow_aug_chunk(image_list):
 
 
 def shear_bright_aug_chunk(image_list):
+    print("AUGMENTATION OF SHEAR")
     # Brigthness and Contrast # Augemented
     for idx, img_path in enumerate(image_list):
 
@@ -128,6 +132,7 @@ def shear_bright_aug_chunk(image_list):
 
         
 def shear_bright_tras_aug_chunk(image_list):
+    print("AUGMENTATION RANDOM TRASLATION")
     # Brigthness and Contrast # Augemented
     for idx, img_path in enumerate(image_list):
 
@@ -158,36 +163,40 @@ def shear_bright_tras_aug_chunk(image_list):
         cv2.imwrite(os.path.join(augmentation_dir,aug_name),tras_image)        
 
 
-chunks_size = len(images) // 8
+chunks_size = len(images) // 32
 
-if (rank == 0):
-    print("AUGMENTATION BRIGTHNESS AND CONTRAST")
-    brigth_aug_chunk(images[0:chunks_size])
+if (rank == 0): brigth_aug_chunk(images[0:chunks_size])
+if (rank == 1): brigth_aug_chunk(images[chunks_size:chunks_size*2])
+if (rank == 2): brigth_aug_chunk(images[chunks_size*2:chunks_size*3])
+if (rank == 3): brigth_aug_chunk(images[chunks_size*3:chunks_size*4])
+if (rank == 4): brigth_aug_chunk(images[chunks_size*4:chunks_size*5])
+if (rank == 5): brigth_aug_chunk(images[chunks_size*5:chunks_size*6])
+if (rank == 6): brigth_aug_chunk(images[chunks_size*6:chunks_size*7])
+if (rank == 7): brigth_aug_chunk(images[chunks_size*7:chunks_size*8])
 
-if (rank == 1):
-    print("AUGMENTATION BRIGTHNESS AND CONTRAST")
-    brigth_aug_chunk(images[chunks_size:chunks_size*2])
+if (rank == 8): shear_bright_aug_chunk(images[chunks_size*8:chunks_size*9])
+if (rank == 9): shear_bright_aug_chunk(images[chunks_size*9:chunks_size*10])
+if (rank == 10): shear_bright_aug_chunk(images[chunks_size*10:chunks_size*11])
+if (rank == 11): shear_bright_aug_chunk(images[chunks_size*11:chunks_size*12])
+if (rank == 12): shear_bright_aug_chunk(images[chunks_size*12:chunks_size*13])
+if (rank == 13): shear_bright_aug_chunk(images[chunks_size*13:chunks_size*14])
+if (rank == 14): shear_bright_aug_chunk(images[chunks_size*14:chunks_size*15])
+if (rank == 15): shear_bright_aug_chunk(images[chunks_size*15:chunks_size*16])
 
-if (rank == 2):
-    print("AUGMENTATION OF SHEAR")
-    shear_bright_aug_chunk(images[chunks_size*2:chunks_size*3])
+if (rank == 16): random_shadow_aug_chunk(images[chunks_size*16:chunks_size*17])
+if (rank == 17): random_shadow_aug_chunk(images[chunks_size*17:chunks_size*18])
+if (rank == 18): random_shadow_aug_chunk(images[chunks_size*18:chunks_size*19])
+if (rank == 19): random_shadow_aug_chunk(images[chunks_size*19:chunks_size*20])
+if (rank == 20): random_shadow_aug_chunk(images[chunks_size*20:chunks_size*21])
+if (rank == 21): random_shadow_aug_chunk(images[chunks_size*21:chunks_size*22])
+if (rank == 22): random_shadow_aug_chunk(images[chunks_size*22:chunks_size*23])
+if (rank == 23): random_shadow_aug_chunk(images[chunks_size*23:chunks_size*24])
 
-if (rank == 3):
-    print("AUGMENTATION OF SHEAR")
-    shear_bright_aug_chunk(images[chunks_size*3:chunks_size*4])
-
-if (rank == 4):
-    print("AUGMENTATION RANDOM SHADOW")
-    random_shadow_aug_chunk(images[chunks_size*4:chunks_size*5])
-
-if (rank == 5):
-    print("AUGMENTATION RANDOM SHADOW")
-    random_shadow_aug_chunk(images[chunks_size*5:chunks_size*6])
-
-if (rank == 6):
-    print("AUGMENTATION RANDOM TRASLATION")
-    random_shadow_aug_chunk(images[chunks_size*6:chunks_size*7])       
-
-if (rank == 7):
-    print("AUGMENTATION RANDOM TRASLATION")
-    random_shadow_aug_chunk(images[chunks_size*7:-1])    
+if (rank == 24): shear_bright_tras_aug_chunk(images[chunks_size*24:chunks_size*25])       
+if (rank == 25): shear_bright_tras_aug_chunk(images[chunks_size*25:chunks_size*26])       
+if (rank == 26): shear_bright_tras_aug_chunk(images[chunks_size*26:chunks_size*27])       
+if (rank == 27): shear_bright_tras_aug_chunk(images[chunks_size*27:chunks_size*28])       
+if (rank == 28): shear_bright_tras_aug_chunk(images[chunks_size*28:chunks_size*29])       
+if (rank == 29): shear_bright_tras_aug_chunk(images[chunks_size*29:chunks_size*30])       
+if (rank == 30): shear_bright_tras_aug_chunk(images[chunks_size*30:chunks_size*31])       
+if (rank == 31): shear_bright_tras_aug_chunk(images[chunks_size*31:-1])  
