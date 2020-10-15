@@ -11,3 +11,4 @@ past_annotations/
 augmentation/
 gen_augmentation/
 .vscode/
+.vscode/settings.json
