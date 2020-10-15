@@ -5,9 +5,10 @@ import os
 import glob
 import cv2 as cv
 from matplotlib import pyplot as plt
+import numpy as np
 
 path='./test/*.jpg'
-augmentation_dir = "augmentation"
+augmentation_dir = "gen_augmentation"
 mini_aug_dir = "mini_aug"
 
 #create the folder augmentation
@@ -16,11 +17,89 @@ if not os.path.exists(augmentation_dir):
 
 images= glob.glob(path)
 
-for idx, img_path in enumerate(images):
-    img_name = img_path.split('/')[-1]
-    type_plate = img_name.split('_')[-2][-1]
-    random_interval = (-1.28,0.3) if type_plate == "1" else (-1.6,0.3)
-    image = cv2.imread(img_path)
-    rd_image = am.random_brightness(image,random_interval)
-    print("Augmented image: {}  Type: {}".format(os.path.join(augmentation_dir,img_name),type_plate))
-    cv2.imwrite(os.path.join(augmentation_dir,img_name),rd_image)
+def brigth_aug_chunk(image_list):
+    # Brigthness and Contrast # Augemented
+    for idx, img_path in enumerate(image_list):
+
+        # string name
+        img_name = img_path.split('/')[-1]
+        type_plate = img_name.split('_')[-2][-1]
+        aug_name = img_name.split('.')[-2] + "_aug_1" + ".jpg"
+
+        #load image
+        image = cv2.imread(img_path)
+
+        # define the random parameter
+        random_interval = (-1.28,0.3) if type_plate == "1" else (-1.6,0.3)
+        coeff_brightness = np.random.uniform(random_interval[0],random_interval[1])
+
+        #agumentation
+        rd_image = am.change_light_contrast(image,coeff_brightness)
+
+        #save image
+        print("Augmented image: {} Augmentation Type: {} Type: {}".format(os.path.join(augmentation_dir,img_name),"1",type_plate))
+        cv2.imwrite(os.path.join(augmentation_dir,aug_name),rd_image)
+
+def random_shadow_aug_chunk(image_list):
+    # Random Shadow # Augemented 3
+    for idx, img_path in enumerate(image_list):
+
+        # string name
+        img_name = img_path.split('/')[-1]
+        type_plate = img_name.split('_')[-2][-1]
+        aug_name = img_name.split('.')[-2] + "_aug_3" + ".jpg"
+
+        #load image
+        image = cv2.imread(img_path)
+
+        # define the random parameter
+        random_type = np.random.choice([1,2,3])
+
+        rd_image = None
+
+        if random_type == 1:
+            rnd_var_y_shadow = np.random.uniform(0,0.5)
+            #agumentation
+            rd_image = am.add_shadow(image,var_y_shadow=rnd_var_y_shadow)
+
+        elif random_type == 2:
+            rnd_var_y_shadow = np.random.uniform(0.9,1.0)
+            rnd_var_bot_x_right = np.random.uniform(0.35,0.45)
+            rnd_var_top_x_right = np.random.uniform(0.0,0.25)
+            #agumentation
+            rd_image = am.add_shadow(image,
+                var_y_shadow = rnd_var_y_shadow,
+                var_bot_x_right = rnd_var_bot_x_right,
+                var_top_x_right = rnd_var_top_x_right)
+
+        elif random_type == 3:
+            rnd_var_y_shadow = np.random.uniform(0.9,1.0)
+            rnd_var_bot_x_left = np.random.uniform(0.35,0.45)
+            rnd_var_top_x_left = np.random.uniform(0.0,0.25)
+            #agumentation
+            rd_image = am.add_shadow(image,
+                var_y_shadow = rnd_var_y_shadow,
+                var_bot_x_left = rnd_var_bot_x_left,
+                var_top_x_left = rnd_var_top_x_left)
+
+        # define the random parameter
+        random_interval = (-0.78,0.3) if type_plate == "1" else (-1.1,0.3)
+        coeff_brightness = np.random.uniform(random_interval[0],random_interval[1])
+
+        #agumentation brigthness
+        rd_image = am.change_light_contrast(rd_image,coeff_brightness)
+
+        #save image
+        print("Augmented image: {} Augmentation Type: {} Format Type: {}".format(os.path.join(augmentation_dir,img_name),"3",type_plate))
+        cv2.imwrite(os.path.join(augmentation_dir,aug_name),rd_image)
+
+
+chunks_size = len(images) // 4
+
+print("AUGMENTATION BRIGTHNESS AND CONTRAST")
+brigth_aug_chunk(images[0:chunks_size])
+# brigth_aug_chunk(images[chunks_size:chunks_size*2])
+
+print("AUGMENTATION RANDOM SHADOW")
+random_shadow_aug_chunk(images[chunks_size*2:chunks_size*3])
+

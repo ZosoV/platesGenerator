@@ -48,8 +48,8 @@ NOISES = ["gauss", "s&p", "poisson"]
 NOISE_ID = 0
 
 #Plate Variations
-MIN_SCALE=0.4
-MAX_SCALE=0.50
+# MIN_SCALE=0.4
+# MAX_SCALE=0.50
 ROTATION_VARIATION=0.25
 
 #Type Configuration
@@ -61,7 +61,7 @@ PLATE_MARGINS = [
         "spacing" : 0.005,
         "extra_spacing": [0.2, 0.4],
         "min_scale": 0.38,
-        "max_scale": 0.48 
+        "max_scale": 0.45 
         },
     {
         "h_padding" : 0.1,
@@ -70,7 +70,7 @@ PLATE_MARGINS = [
         "spacing" : 0.005,
         "extra_spacing": [0.2, 0.08],
         "min_scale": 0.5,
-        "max_scale": 0.55 
+        "max_scale": 0.53 
         }]
 
 
@@ -92,6 +92,7 @@ LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 CHARS = LETTERS + DIGITS
 CHARS = CHARS + " "
 
+im_codes_acumulate = []
 
 #Function that returns a char with a its respective img RGB using a font
 def make_char_ims(font_path, output_height, color):
@@ -168,8 +169,10 @@ def make_affine_transform(from_shape, to_shape,
 
 #Function that generates de code of plate using a prefined format
 def generate_code():
+    code = ""
+
     if (PARAMS.format == 1):
-        return "{}{}{}{}{}{}".format(
+        code = "{}{}{}{}{}{}".format(
                 random.choice(LETTER_FORMAT_1),
                 random.choice(LETTER_FORMAT_1),
                 random.choice(LETTER_FORMAT_1),
@@ -177,13 +180,19 @@ def generate_code():
                 random.choice(DIGITS),
                 random.choice(DIGITS))
     else:
-        return "{}{}{}{}{}{}".format(
+        code = "{}{}{}{}{}{}".format(
                 random.choice(LETTER_1_FORMAT_2),
                 random.choice(LETTER_2_FORMAT_2),
                 random.choice(DIGITS),
                 random.choice(DIGITS),
                 random.choice(DIGITS),
                 random.choice(DIGITS))
+
+    if not (code in im_codes_acumulate):
+        im_codes_acumulate.append(code)
+        return code
+    else:
+        return generate_code()
 
 #Function that return a rounded rect given a shape and radius
 def rounded_rect(shape, radius):
@@ -402,7 +411,6 @@ def generate_im(font_char_ims, num_bg_images):
 
     return out, code
 
-
 # Function that create the dictionary of fonts
 def load_fonts(folder_path,font):
     '''
@@ -450,7 +458,6 @@ def parse_args():
     parser.add_argument('--dataset', type=str, default="mini_bgs",
                         help='Chose the dataset of backgrounds to generate the images')
     return parser.parse_args()
-
 
 def main():
     #create the folder test

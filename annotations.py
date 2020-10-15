@@ -3,16 +3,14 @@ import os
 import subprocess
 from subprocess import PIPE
 
-
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--initial_idx', type=str, default='1',
                         help='Initial index of images to annotate')
     parser.add_argument('--final_idx', type=str, default='5',
                         help='Final idx of the images to annotate')
-    parser.add_argument('--img_path', type=str, default='test/'
-			help='Select the path of the images'=
+    parser.add_argument('--img_path', type=str, default='test/',
+			help='Select the path of the images')
     return parser.parse_args()
 
 def writeAnnotations(strNames, strPlates):
@@ -37,7 +35,7 @@ def renameFolders(listNames,img_path):
 
 if __name__ == "__main__":
     params = parse_args()
-    images = sorted(os.listdir(parser.img_path))
+    images = sorted(os.listdir(params.img_path))
     idx_ini = 0
     idx_fin = 0
     for image in images:
@@ -54,8 +52,6 @@ if __name__ == "__main__":
     names = list(map(lambda image: image[:12], images))
     plates = list(map(lambda plate: plate[13:19], images))
     
-    
-
     print(images)
     print(names)
     print(plates)
