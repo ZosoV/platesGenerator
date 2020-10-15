@@ -80,3 +80,25 @@ def add_shadow(image,var_y_shadow = 0.5, var_bot_x_right = 0, var_bot_x_left = 0
         image_RGB = output
 
     return image_RGB
+
+def translation(image, tx, ty):
+    #image = cv2.imread(img)
+    # Store height and width of the image 
+    height, width = image.shape[:2]
+    #quarter_height, quarter_width = height / 4, width / 4
+    T = np.float32([[1, 0, tx], [0, 1, ty]])
+    # We use warpAffine to transform 
+    # the image using the matrix, T 
+    img_translation = cv2.warpAffine(image, T, (width, height)) 
+    return img_translation
+
+def shear(image, tx, ty):
+    H, W = image.shape[:2]
+#   M2 = np.float32([[1, -0.1, 0], [-0.05, 1, 0]])
+    M2 = np.float32([[1, tx, 0], [ty, 1, 0]])
+    M2[0,2] = -M2[0,1] * W/2
+    M2[1,2] = -M2[1,0] * H/2
+    aff2 = cv2.warpAffine(image, M2, (W, H))
+    return aff2
+
+
