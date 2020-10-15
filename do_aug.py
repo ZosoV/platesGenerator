@@ -6,13 +6,18 @@ import glob
 import cv2 as cv
 from matplotlib import pyplot as plt
 import numpy as np
+from mpi4py import MPI
+
+comm = MPI.COMM_WORLD # Communicador de MPI 
+size = comm.Get_size() # Numero total de Procesadores
+rank = comm.Get_rank() # Id de cada procesador
 
 path='./test/*.jpg'
 augmentation_dir = "gen_augmentation"
 mini_aug_dir = "mini_aug"
 
 #create the folder augmentation
-if not os.path.exists(augmentation_dir):
+if not os.path.exists(augmentation_dir) and rank == 0:
     os.mkdir(augmentation_dir)
 
 images= glob.glob(path)
@@ -155,16 +160,18 @@ def shear_bright_tras_aug_chunk(image_list):
 
 chunks_size = len(images) // 4
 
-print("AUGMENTATION BRIGTHNESS AND CONTRAST")
-brigth_aug_chunk(images[0:chunks_size])
+if (rank == 0):
+    print("AUGMENTATION BRIGTHNESS AND CONTRAST")
+    brigth_aug_chunk(images[0:chunks_size])
 
-print("AUGMENTATION OF SHEAR")
-shear_bright_aug_chunk(images[chunks_size:chunks_size*2])
+if (rank == 1):
+    print("AUGMENTATION OF SHEAR")
+    shear_bright_aug_chunk(images[chunks_size:chunks_size*2])
 
+if (rank == 2):
+    print("AUGMENTATION RANDOM SHADOW")
+    random_shadow_aug_chunk(images[chunks_size*2:chunks_size*3])
 
-print("AUGMENTATION RANDOM SHADOW")
-random_shadow_aug_chunk(images[chunks_size*2:chunks_size*3])
-
-
-print("AUGMENTATION RANDOM TRASLATION")
-random_shadow_aug_chunk(images[chunks_size*3:-1])       
+if (rank == 3):
+    print("AUGMENTATION RANDOM TRASLATION")
+    random_shadow_aug_chunk(images[chunks_size*3:-1])       
