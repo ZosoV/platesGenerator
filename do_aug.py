@@ -158,20 +158,36 @@ def shear_bright_tras_aug_chunk(image_list):
         cv2.imwrite(os.path.join(augmentation_dir,aug_name),tras_image)        
 
 
-chunks_size = len(images) // 4
+chunks_size = len(images) // 8
 
 if (rank == 0):
     print("AUGMENTATION BRIGTHNESS AND CONTRAST")
     brigth_aug_chunk(images[0:chunks_size])
 
 if (rank == 1):
-    print("AUGMENTATION OF SHEAR")
-    shear_bright_aug_chunk(images[chunks_size:chunks_size*2])
+    print("AUGMENTATION BRIGTHNESS AND CONTRAST")
+    brigth_aug_chunk(images[chunks_size:chunks_size*2])
 
 if (rank == 2):
-    print("AUGMENTATION RANDOM SHADOW")
-    random_shadow_aug_chunk(images[chunks_size*2:chunks_size*3])
+    print("AUGMENTATION OF SHEAR")
+    shear_bright_aug_chunk(images[chunks_size*2:chunks_size*3])
 
 if (rank == 3):
+    print("AUGMENTATION OF SHEAR")
+    shear_bright_aug_chunk(images[chunks_size*3:chunks_size*4])
+
+if (rank == 4):
+    print("AUGMENTATION RANDOM SHADOW")
+    random_shadow_aug_chunk(images[chunks_size*4:chunks_size*5])
+
+if (rank == 5):
+    print("AUGMENTATION RANDOM SHADOW")
+    random_shadow_aug_chunk(images[chunks_size*5:chunks_size*6])
+
+if (rank == 6):
     print("AUGMENTATION RANDOM TRASLATION")
-    random_shadow_aug_chunk(images[chunks_size*3:-1])       
+    random_shadow_aug_chunk(images[chunks_size*6:chunks_size*7])       
+
+if (rank == 7):
+    print("AUGMENTATION RANDOM TRASLATION")
+    random_shadow_aug_chunk(images[chunks_size*7:-1])    
