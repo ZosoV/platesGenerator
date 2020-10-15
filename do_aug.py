@@ -94,12 +94,15 @@ def random_shadow_aug_chunk(image_list):
         cv2.imwrite(os.path.join(augmentation_dir,aug_name),rd_image)
 
 
-chunks_size = len(images) // 4
+chunks_size = len(images) // 3
 
 print("AUGMENTATION BRIGTHNESS AND CONTRAST")
 brigth_aug_chunk(images[0:chunks_size])
+
+print("AUGMENTATION OF TRASLATION AND SHEAR")
+# TODO: Diego
 # brigth_aug_chunk(images[chunks_size:chunks_size*2])
 
 print("AUGMENTATION RANDOM SHADOW")
-random_shadow_aug_chunk(images[chunks_size*2:chunks_size*3])
+random_shadow_aug_chunk(images[chunks_size*2:-1])
 
