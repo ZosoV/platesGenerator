@@ -10,3 +10,4 @@ mini_bg/
 past_annotations/
 augmentation/
 gen_augmentation/
+.vscode/

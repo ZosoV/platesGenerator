@@ -94,15 +94,77 @@ def random_shadow_aug_chunk(image_list):
         cv2.imwrite(os.path.join(augmentation_dir,aug_name),rd_image)
 
 
-chunks_size = len(images) // 3
+def shear_bright_aug_chunk(image_list):
+    # Brigthness and Contrast # Augemented
+    for idx, img_path in enumerate(image_list):
+
+        # string name
+        img_name = img_path.split('/')[-1]
+        type_plate = img_name.split('_')[-2][-1]
+        aug_name = img_name.split('.')[-2] + "_aug_2" + ".jpg"
+
+        #load image
+        image = cv2.imread(img_path)
+
+        # define the random parameter
+        random_interval = (-1.28,0.3) if type_plate == "1" else (-1.6,0.3)
+        coeff_brightness = np.random.uniform(random_interval[0],random_interval[1])
+        tx = np.random.uniform(-0.1,0.1)
+        ty = np.random.uniform(-0.05,0.05)
+        
+
+        #agumentation
+        rd_image = am.change_light_contrast(image,coeff_brightness)
+        sh_image = am.shear(rd_image, tx, ty)
+
+        #save image
+        print("Augmented image: {} Augmentation Type: {} Type: {}".format(os.path.join(augmentation_dir,img_name),"2",type_plate))
+        cv2.imwrite(os.path.join(augmentation_dir,aug_name),sh_image)
+
+        
+def shear_bright_tras_aug_chunk(image_list):
+    # Brigthness and Contrast # Augemented
+    for idx, img_path in enumerate(image_list):
+
+        # string name
+        img_name = img_path.split('/')[-1]
+        type_plate = img_name.split('_')[-2][-1]
+        aug_name = img_name.split('.')[-2] + "_aug_4" + ".jpg"
+
+        #load image
+        image = cv2.imread(img_path)
+
+        # define the random parameter
+        random_interval = (-1.28,0.3) if type_plate == "1" else (-1.6,0.3)
+        coeff_brightness = np.random.uniform(random_interval[0],random_interval[1])
+        tx = np.random.uniform(-0.1,0.1)
+        ty = np.random.uniform(-0.05,0.05)
+
+        tx_tras = np.random.uniform(-5,5)
+        
+
+        #agumentation
+        rd_image = am.change_light_contrast(image,coeff_brightness)
+        sh_image = am.shear(rd_image, tx, ty)
+        tras_image = am.translation(sh_image, tx_tras, 0)
+
+        #save image
+        print("Augmented image: {} Augmentation Type: {} Type: {}".format(os.path.join(augmentation_dir,img_name),"4",type_plate))
+        cv2.imwrite(os.path.join(augmentation_dir,aug_name),tras_image)        
+
+
+chunks_size = len(images) // 4
 
 print("AUGMENTATION BRIGTHNESS AND CONTRAST")
 brigth_aug_chunk(images[0:chunks_size])
 
-print("AUGMENTATION OF TRASLATION AND SHEAR")
-# TODO: Diego
-# brigth_aug_chunk(images[chunks_size:chunks_size*2])
+print("AUGMENTATION OF SHEAR")
+shear_bright_aug_chunk(images[chunks_size:chunks_size*2])
+
 
 print("AUGMENTATION RANDOM SHADOW")
-random_shadow_aug_chunk(images[chunks_size*2:-1])
+random_shadow_aug_chunk(images[chunks_size*2:chunks_size*3])
 
+
+print("AUGMENTATION RANDOM TRASLATION")
+random_shadow_aug_chunk(images[chunks_size*3:-1])       
